@@ -7,7 +7,6 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node dist/src/server.ts",
     "dev": "nodemon src/server.ts",
-    "vercel-build": "prisma generate && next build",
     "build": "tsc",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
