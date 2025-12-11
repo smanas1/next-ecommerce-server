@@ -165,3 +165,91 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
     message: "User logged out successfully",
   });
 };
+
+export const updateProfile = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { userId } = (req as any).user; // Assuming middleware adds user info
+    const { name, email } = req.body;
+
+    // Check if another user already has this email
+    if (email) {
+      const existingUser = await prisma.user.findUnique({
+        where: { email, NOT: { id: userId } } // Exclude current user
+      });
+
+      if (existingUser) {
+        res.status(400).json({
+          success: false,
+          error: "Email already in use by another user",
+        });
+        return;
+      }
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...(name && { name }),
+        ...(email && { email }),
+        updatedAt: new Date(),
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true,
+      }
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error("Update profile error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Profile update failed"
+    });
+  }
+};
+
+export const getProfile = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { userId } = (req as any).user; // Assuming middleware adds user info
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true,
+      }
+    });
+
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        error: "User not found",
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      user,
+    });
+  } catch (error) {
+    console.error("Get profile error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch profile"
+    });
+  }
+};
