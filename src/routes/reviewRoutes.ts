@@ -1,5 +1,6 @@
 import express from "express";
 import { authenticateJwt } from "../middleware/authMiddleware";
+import { isSuperAdmin } from "../middleware/authMiddleware";
 import {
   createReview,
   getProductReviews,
@@ -7,6 +8,9 @@ import {
   updateReview,
   deleteReview,
   canReviewProduct,
+  getAllReviews,
+  adminUpdateReview,
+  adminDeleteReview,
 } from "../controllers/reviewController";
 
 const router = express.Router();
@@ -28,5 +32,10 @@ router.delete("/:reviewId", authenticateJwt, deleteReview);
 
 // Check if user can review a product
 router.get("/can-review/:productId/:orderId", authenticateJwt, canReviewProduct);
+
+// Admin routes - Super Admin only
+router.get("/", authenticateJwt, isSuperAdmin, getAllReviews);
+router.put("/admin/:reviewId", authenticateJwt, isSuperAdmin, adminUpdateReview);
+router.delete("/admin/:reviewId", authenticateJwt, isSuperAdmin, adminDeleteReview);
 
 export default router;

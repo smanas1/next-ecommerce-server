@@ -411,6 +411,175 @@ export const canReviewProduct = async (
 };
 
 /**
+ * Get all reviews (admin only)
+ */
+export const getAllReviews = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const reviews = await prisma.review.findMany({
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        product: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      reviews,
+    });
+  } catch (error) {
+    console.error("Error getting all reviews:", error);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while retrieving reviews",
+    });
+  }
+};
+
+/**
+ * Update a review (admin only)
+ */
+export const adminUpdateReview = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const { reviewId } = req.params;
+    const { rating, title, comment } = req.body;
+
+    // Validate rating range (1 to 5)
+    if (rating !== undefined && (rating < 1 || rating > 5)) {
+      res.status(400).json({
+        success: false,
+        message: "Rating must be between 1 and 5",
+      });
+      return;
+    }
+
+    // Find the review
+    const review = await prisma.review.findUnique({
+      where: {
+        id: reviewId,
+      },
+    });
+
+    if (!review) {
+      res.status(404).json({
+        success: false,
+        message: "Review not found",
+      });
+      return;
+    }
+
+    // Update the review
+    const updatedReview = await prisma.review.update({
+      where: {
+        id: reviewId,
+      },
+      data: {
+        ...(rating !== undefined && { rating }),
+        ...(title !== undefined && { title }),
+        ...(comment !== undefined && { comment }),
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        product: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    // Update the product's average rating
+    await updateProductAverageRating(review.productId);
+
+    res.status(200).json({
+      success: true,
+      message: "Review updated successfully",
+      review: updatedReview,
+    });
+  } catch (error) {
+    console.error("Error updating review:", error);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while updating the review",
+    });
+  }
+};
+
+/**
+ * Delete a review (admin only)
+ */
+export const adminDeleteReview = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const { reviewId } = req.params;
+
+    // Find the review
+    const review = await prisma.review.findUnique({
+      where: {
+        id: reviewId,
+      },
+    });
+
+    if (!review) {
+      res.status(404).json({
+        success: false,
+        message: "Review not found",
+      });
+      return;
+    }
+
+    // Delete the review
+    await prisma.review.delete({
+      where: {
+        id: reviewId,
+      },
+    });
+
+    // Update the product's average rating since a review was removed
+    await updateProductAverageRating(review.productId);
+
+    res.status(200).json({
+      success: true,
+      message: "Review deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting review:", error);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while deleting the review",
+    });
+  }
+};
+
+/**
  * Helper function to update product average rating
  */
 async function updateProductAverageRating(productId: string) {
