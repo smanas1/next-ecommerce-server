@@ -10,6 +10,7 @@ import settingsRoutes from "./routes/settingRoutes";
 import cartRoutes from "./routes/cartRoutes";
 import addressRoutes from "./routes/addressRoutes";
 import orderRoutes from "./routes/orderRoutes";
+import reviewRoutes from "./routes/reviewRoutes";
 
 //load all your enviroment variables
 dotenv.config();
@@ -36,6 +37,7 @@ app.use("/api/settings", settingsRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/address", addressRoutes);
 app.use("/api/order", orderRoutes);
+app.use("/api/reviews", reviewRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello from E-Commerce backend");

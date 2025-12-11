@@ -84,6 +84,21 @@ export const getProductByID = async (
     const { id } = req.params;
     const product = await prisma.product.findUnique({
       where: { id },
+      include: {
+        reviews: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+        },
+      },
     });
 
     if (!product) {
@@ -91,6 +106,7 @@ export const getProductByID = async (
         success: false,
         message: "Product not found",
       });
+      return;
     }
 
     res.status(200).json(product);
