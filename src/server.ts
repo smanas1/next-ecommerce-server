@@ -12,16 +12,12 @@ import addressRoutes from "./routes/addressRoutes";
 import orderRoutes from "./routes/orderRoutes";
 import reviewRoutes from "./routes/reviewRoutes";
 
-//load all your enviroment variables
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Handle CORS differently based on environment
 let corsOptions;
 if (process.env.NODE_ENV === "production") {
-  // In production, use the CLIENT_URL from environment variables
-  // This should be set in your deployment platform (e.g., Vercel dashboard)
   const clientUrl = process.env.CLIENT_URL;
   if (clientUrl) {
     corsOptions = {
@@ -31,10 +27,11 @@ if (process.env.NODE_ENV === "production") {
       allowedHeaders: ["Content-Type", "Authorization"],
     };
   } else {
-    // If CLIENT_URL is not set in production, warn the developer but use wildcard as fallback
-    console.warn("CLIENT_URL environment variable is not set in production. Please set it in your deployment platform settings.");
+    console.warn(
+      "CLIENT_URL environment variable is not set in production. Please set it in your deployment platform settings."
+    );
     corsOptions = {
-      origin: "*", // This is less secure but allows requests during development
+      origin: "*",
       credentials: true,
       methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization"],
@@ -68,9 +65,8 @@ app.get("/", (req, res) => {
   res.send("Hello from E-Commerce backend");
 });
 
-// Trust proxy in production to properly handle HTTPS headers
 if (process.env.NODE_ENV === "production") {
-  app.set("trust proxy", 1); // trust first proxy
+  app.set("trust proxy", 1);
 }
 
 app.listen(PORT, () => {
