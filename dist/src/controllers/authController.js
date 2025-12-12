@@ -28,16 +28,18 @@ function generateToken(userId, email, role) {
 }
 function setTokens(res, accessToken, refreshToken) {
     return __awaiter(this, void 0, void 0, function* () {
+        // Determine if the connection is secure (HTTPS) to properly set secure cookie flag
+        const isSecure = res.req.secure || res.req.headers['x-forwarded-proto'] === 'https';
         res.cookie("accessToken", accessToken, {
             httpOnly: true,
-            secure: true,
-            sameSite: "none",
+            secure: isSecure, // True if the request was made over HTTPS
+            sameSite: isSecure ? "none" : "lax", // Use none only when secure (production with HTTPS)
             maxAge: 60 * 60 * 1000,
         });
         res.cookie("refreshToken", refreshToken, {
             httpOnly: true,
-            secure: true,
-            sameSite: "none",
+            secure: isSecure, // True if the request was made over HTTPS
+            sameSite: isSecure ? "none" : "lax", // Use none only when secure (production with HTTPS)
             maxAge: 7 * 24 * 60 * 60,
         });
     });

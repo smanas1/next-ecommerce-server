@@ -17,7 +17,6 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const client_1 = require("@prisma/client");
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
-const serverless_http_1 = __importDefault(require("serverless-http"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const authRoutes_1 = __importDefault(require("./routes/authRoutes"));
 const productRoutes_1 = __importDefault(require("./routes/productRoutes"));
@@ -31,12 +30,26 @@ const reviewRoutes_1 = __importDefault(require("./routes/reviewRoutes"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 3001;
-const corsOptions = {
-    origin: process.env.CLIENT_URL || "http://localhost:3000",
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-};
+// Handle CORS differently based on environment
+let corsOptions;
+if (process.env.NODE_ENV === "production") {
+    // In production, use the CLIENT_URL from environment or a default production URL
+    // Add your production domain here
+    corsOptions = {
+        origin: process.env.CLIENT_URL || "https://your-production-domain.com", // Replace with your actual deployed domain
+        credentials: true,
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization"],
+    };
+}
+else {
+    corsOptions = {
+        origin: process.env.CLIENT_URL || "http://localhost:3000",
+        credentials: true,
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization"],
+    };
+}
 app.use((0, cors_1.default)(corsOptions));
 app.use(express_1.default.json());
 app.use((0, cookie_parser_1.default)());
@@ -52,12 +65,13 @@ app.use("/api/reviews", reviewRoutes_1.default);
 app.get("/", (req, res) => {
     res.send("Hello from E-Commerce backend");
 });
-if (process.env.NODE_ENV !== "production") {
-    app.listen(PORT, () => {
-        console.log(`Server is now running on port ${PORT}`);
-    });
+// Trust proxy in production to properly handle HTTPS headers
+if (process.env.NODE_ENV === "production") {
+    app.set("trust proxy", 1); // trust first proxy
 }
-exports.default = (0, serverless_http_1.default)(app);
+app.listen(PORT, () => {
+    console.log(`Server is now running on port ${PORT}`);
+});
 process.on("SIGINT", () => __awaiter(void 0, void 0, void 0, function* () {
     yield exports.prisma.$disconnect();
     process.exit();

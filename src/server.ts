@@ -2,7 +2,6 @@ import dotenv from "dotenv";
 import { PrismaClient } from "@prisma/client";
 import express from "express";
 import cors from "cors";
-import serverless from "serverless-http";
 import cookieParser from "cookie-parser";
 import authRoutes from "./routes/authRoutes";
 import productRoutes from "./routes/productRoutes";
@@ -59,15 +58,12 @@ app.get("/", (req, res) => {
 
 // Trust proxy in production to properly handle HTTPS headers
 if (process.env.NODE_ENV === "production") {
-  app.set('trust proxy', 1); // trust first proxy
+  app.set("trust proxy", 1); // trust first proxy
 }
 
-if (process.env.NODE_ENV !== "production") {
-  app.listen(PORT, () => {
-    console.log(`Server is now running on port ${PORT}`);
-  });
-}
-export default serverless(app);
+app.listen(PORT, () => {
+  console.log(`Server is now running on port ${PORT}`);
+});
 process.on("SIGINT", async () => {
   await prisma.$disconnect();
   process.exit();
