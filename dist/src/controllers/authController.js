@@ -31,13 +31,13 @@ function setTokens(res, accessToken, refreshToken) {
         res.cookie("accessToken", accessToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
+            sameSite: "none",
             maxAge: 60 * 60 * 1000,
         });
         res.cookie("refreshToken", refreshToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
+            sameSite: "none",
             maxAge: 7 * 24 * 60 * 60,
         });
     });
@@ -160,7 +160,7 @@ const updateProfile = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         // Check if another user already has this email
         if (email) {
             const existingUser = yield server_1.prisma.user.findUnique({
-                where: { email, NOT: { id: userId } } // Exclude current user
+                where: { email, NOT: { id: userId } }, // Exclude current user
             });
             if (existingUser) {
                 res.status(400).json({
@@ -180,7 +180,7 @@ const updateProfile = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 role: true,
                 createdAt: true,
                 updatedAt: true,
-            }
+            },
         });
         res.status(200).json({
             success: true,
@@ -192,7 +192,7 @@ const updateProfile = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         console.error("Update profile error:", error);
         res.status(500).json({
             success: false,
-            error: "Profile update failed"
+            error: "Profile update failed",
         });
     }
 });
@@ -209,7 +209,7 @@ const getProfile = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                 role: true,
                 createdAt: true,
                 updatedAt: true,
-            }
+            },
         });
         if (!user) {
             res.status(404).json({
@@ -227,7 +227,7 @@ const getProfile = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         console.error("Get profile error:", error);
         res.status(500).json({
             success: false,
-            error: "Failed to fetch profile"
+            error: "Failed to fetch profile",
         });
     }
 });
