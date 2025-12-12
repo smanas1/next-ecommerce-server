@@ -102,5 +102,4 @@ Adjust commands to match your package.json.
 - Follow existing patterns; run lint/tests before PR.
 - Document API changes and add Prisma migrations for schema updates.
 
-## License
-See repository root LICENSE for license details.
+
