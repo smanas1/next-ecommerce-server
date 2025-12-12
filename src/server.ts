@@ -18,12 +18,25 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-const corsOptions = {
-  origin: process.env.CLIENT_URL || "http://localhost:3000",
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-};
+// Handle CORS differently based on environment
+let corsOptions;
+if (process.env.NODE_ENV === "production") {
+  // In production, use the CLIENT_URL from environment or a default production URL
+  // Add your production domain here
+  corsOptions = {
+    origin: process.env.CLIENT_URL || "https://your-production-domain.com", // Replace with your actual deployed domain
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  };
+} else {
+  corsOptions = {
+    origin: process.env.CLIENT_URL || "http://localhost:3000",
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  };
+}
 
 app.use(cors(corsOptions));
 app.use(express.json());
@@ -43,6 +56,11 @@ app.use("/api/reviews", reviewRoutes);
 app.get("/", (req, res) => {
   res.send("Hello from E-Commerce backend");
 });
+
+// Trust proxy in production to properly handle HTTPS headers
+if (process.env.NODE_ENV === "production") {
+  app.set('trust proxy', 1); // trust first proxy
+}
 
 if (process.env.NODE_ENV !== "production") {
   app.listen(PORT, () => {
