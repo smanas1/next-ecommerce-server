@@ -20,14 +20,26 @@ const PORT = process.env.PORT || 3001;
 // Handle CORS differently based on environment
 let corsOptions;
 if (process.env.NODE_ENV === "production") {
-  // In production, use the CLIENT_URL from environment or a default production URL
-  // Add your production domain here
-  corsOptions = {
-    origin: process.env.CLIENT_URL || "https://your-production-domain.com", // Replace with your actual deployed domain
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  };
+  // In production, use the CLIENT_URL from environment variables
+  // This should be set in your deployment platform (e.g., Vercel dashboard)
+  const clientUrl = process.env.CLIENT_URL;
+  if (clientUrl) {
+    corsOptions = {
+      origin: clientUrl,
+      credentials: true,
+      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization"],
+    };
+  } else {
+    // If CLIENT_URL is not set in production, warn the developer but use wildcard as fallback
+    console.warn("CLIENT_URL environment variable is not set in production. Please set it in your deployment platform settings.");
+    corsOptions = {
+      origin: "*", // This is less secure but allows requests during development
+      credentials: true,
+      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization"],
+    };
+  }
 } else {
   corsOptions = {
     origin: process.env.CLIENT_URL || "http://localhost:3000",
