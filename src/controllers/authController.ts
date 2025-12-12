@@ -126,6 +126,7 @@ export const refreshAccessToken = async (
       success: false,
       error: "Invalid refresh token",
     });
+    return;
   }
 
   try {
@@ -148,15 +149,26 @@ export const refreshAccessToken = async (
       user.email,
       user.role
     );
-    //set out tokens
+
+    // Set new tokens in cookies
     await setTokens(res, accessToken, newRefreshToken);
+
     res.status(200).json({
       success: true,
-      message: "Refresh token refreshed successfully",
+      message: "Access token refreshed successfully",
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Refresh token error" });
+    res.status(500).json({
+      success: false,
+      error: "Refresh token error"
+    });
   }
 };
 
