@@ -22,26 +22,33 @@ function generateToken(userId, email, role) {
         userId,
         email,
         role,
-    }, process.env.JWT_SECRET, { expiresIn: "60m" });
+    }, process.env.JWT_SECRET, { expiresIn: "3d" });
     const refreshToken = (0, uuid_1.v4)();
     return { accessToken, refreshToken };
 }
 function setTokens(res, accessToken, refreshToken) {
     return __awaiter(this, void 0, void 0, function* () {
-        // Determine if the connection is secure (HTTPS) to properly set secure cookie flag
-        const isSecure = res.req.secure || res.req.headers['x-forwarded-proto'] === 'https';
-        res.cookie("accessToken", accessToken, {
-            httpOnly: true,
-            secure: isSecure, // True if the request was made over HTTPS
-            sameSite: isSecure ? "none" : "lax", // Use none only when secure (production with HTTPS)
-            maxAge: 60 * 60 * 1000,
-        });
-        res.cookie("refreshToken", refreshToken, {
-            httpOnly: true,
-            secure: isSecure, // True if the request was made over HTTPS
-            sameSite: isSecure ? "none" : "lax", // Use none only when secure (production with HTTPS)
-            maxAge: 7 * 24 * 60 * 60,
-        });
+        // Determine if the connection is secure (HTTPS)
+        const isSecure = res.req.secure ||
+            res.req.headers["x-forwarded-proto"] === "https";
+        // For cross-origin setups (different domains), use appropriate SameSite setting:
+        // - sameSite: 'none' with secure: true for cross-domain requests in production
+        // - sameSite: 'lax' for same-domain or development setups
+        const cookieConfig = isSecure
+            ? {
+                httpOnly: true,
+                secure: true, // Must be true when sameSite is 'none'
+                sameSite: "none" // Required for cross-domain cookies in production HTTPS
+            }
+            : {
+                httpOnly: true,
+                secure: false, // For development without HTTPS
+                sameSite: "lax" // Safer for non-secure contexts
+            };
+        const accessTokenOptions = Object.assign(Object.assign({}, cookieConfig), { maxAge: 24 * 60 * 60 * 1000 });
+        const refreshTokenOptions = Object.assign(Object.assign({}, cookieConfig), { maxAge: 7 * 24 * 60 * 60 * 1000 });
+        res.cookie("accessToken", accessToken, accessTokenOptions);
+        res.cookie("refreshToken", refreshToken, refreshTokenOptions);
     });
 }
 const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -151,7 +158,7 @@ const refreshAccessToken = (req, res) => __awaiter(void 0, void 0, void 0, funct
         console.error(error);
         res.status(500).json({
             success: false,
-            error: "Refresh token error"
+            error: "Refresh token error",
         });
     }
 });

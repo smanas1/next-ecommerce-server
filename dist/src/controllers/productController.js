@@ -108,21 +108,26 @@ const updateProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         const { id } = req.params;
         const { name, brand, description, category, gender, sizes, colors, price, stock, rating, } = req.body;
         console.log(req.body, "req.body");
+        // Prepare update data object
+        const updateData = {
+            name,
+            brand,
+            category,
+            description,
+            gender,
+            sizes: sizes.split(","),
+            colors: colors.split(","),
+            price: parseFloat(price),
+            stock: parseInt(stock),
+        };
+        // Only update rating if it's provided in the request
+        if (rating !== undefined && rating !== null) {
+            updateData.rating = parseFloat(rating);
+        }
         //homework -> you can also implement image update func
         const product = yield server_1.prisma.product.update({
             where: { id },
-            data: {
-                name,
-                brand,
-                category,
-                description,
-                gender,
-                sizes: sizes.split(","),
-                colors: colors.split(","),
-                price: parseFloat(price),
-                stock: parseInt(stock),
-                rating: parseInt(rating),
-            },
+            data: updateData,
         });
         res.status(200).json(product);
     }

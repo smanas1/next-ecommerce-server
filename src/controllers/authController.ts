@@ -23,23 +23,38 @@ async function setTokens(
   accessToken: string,
   refreshToken: string
 ) {
-  // Determine if the connection is secure (HTTPS) to properly set secure cookie flag
+  // Determine if the connection is secure (HTTPS)
   const isSecure =
     (res.req as any).secure ||
     (res.req as any).headers["x-forwarded-proto"] === "https";
 
-  res.cookie("accessToken", accessToken, {
-    httpOnly: true,
-    secure: isSecure, // True if the request was made over HTTPS
-    sameSite: isSecure ? "none" : "lax", // Use none only when secure (production with HTTPS)
-    maxAge: 60 * 60 * 1000,
-  });
-  res.cookie("refreshToken", refreshToken, {
-    httpOnly: true,
-    secure: isSecure, // True if the request was made over HTTPS
-    sameSite: isSecure ? "none" : "lax", // Use none only when secure (production with HTTPS)
-    maxAge: 7 * 24 * 60 * 60,
-  });
+  // For cross-origin setups (different domains), use appropriate SameSite setting:
+  // - sameSite: 'none' with secure: true for cross-domain requests in production
+  // - sameSite: 'lax' for same-domain or development setups
+  const cookieConfig = isSecure
+    ? {
+        httpOnly: true,
+        secure: true, // Must be true when sameSite is 'none'
+        sameSite: "none" as const // Required for cross-domain cookies in production HTTPS
+      }
+    : {
+        httpOnly: true,
+        secure: false, // For development without HTTPS
+        sameSite: "lax" as const // Safer for non-secure contexts
+      };
+
+  const accessTokenOptions = {
+    ...cookieConfig,
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours for access token
+  };
+
+  const refreshTokenOptions = {
+    ...cookieConfig,
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days for refresh token
+  };
+
+  res.cookie("accessToken", accessToken, accessTokenOptions);
+  res.cookie("refreshToken", refreshToken, refreshTokenOptions);
 }
 
 export const register = async (req: Request, res: Response): Promise<void> => {

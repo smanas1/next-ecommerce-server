@@ -10,6 +10,7 @@ const settingsController_1 = require("../controllers/settingsController");
 const router = express_1.default.Router();
 router.post("/banners", authMiddleware_1.authenticateJwt, authMiddleware_1.isSuperAdmin, uploadMiddleware_1.upload.array("images", 5), settingsController_1.addFeatureBanners);
 router.get("/get-banners", authMiddleware_1.authenticateJwt, settingsController_1.fetchFeatureBanners);
+router.delete("/delete-banner/:id", authMiddleware_1.authenticateJwt, authMiddleware_1.isSuperAdmin, settingsController_1.deleteFeatureBanner);
 router.post("/update-feature-products", authMiddleware_1.authenticateJwt, authMiddleware_1.isSuperAdmin, settingsController_1.updateFeaturedProducts);
 router.get("/fetch-feature-products", authMiddleware_1.authenticateJwt, settingsController_1.getFeaturedProducts);
 exports.default = router;

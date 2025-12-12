@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getFeaturedProducts = exports.updateFeaturedProducts = exports.fetchFeatureBanners = exports.addFeatureBanners = void 0;
+exports.deleteFeatureBanner = exports.getFeaturedProducts = exports.updateFeaturedProducts = exports.fetchFeatureBanners = exports.addFeatureBanners = void 0;
 const cloudinary_1 = __importDefault(require("../config/cloudinary"));
 const server_1 = require("../server");
 const fs_1 = __importDefault(require("fs"));
@@ -121,3 +121,35 @@ const getFeaturedProducts = (req, res) => __awaiter(void 0, void 0, void 0, func
     }
 });
 exports.getFeaturedProducts = getFeaturedProducts;
+const deleteFeatureBanner = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { id } = req.params;
+        // Find the banner to delete
+        const banner = yield server_1.prisma.featureBanner.findUnique({
+            where: { id },
+        });
+        if (!banner) {
+            res.status(404).json({
+                success: false,
+                message: "Banner not found",
+            });
+            return;
+        }
+        // Delete the banner from the database
+        yield server_1.prisma.featureBanner.delete({
+            where: { id },
+        });
+        res.status(200).json({
+            success: true,
+            message: "Banner deleted successfully",
+        });
+    }
+    catch (e) {
+        console.error(e);
+        res.status(500).json({
+            success: false,
+            message: "Failed to delete feature banner",
+        });
+    }
+});
+exports.deleteFeatureBanner = deleteFeatureBanner;
