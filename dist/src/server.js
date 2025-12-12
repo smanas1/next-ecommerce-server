@@ -17,6 +17,7 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const client_1 = require("@prisma/client");
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
+const serverless_http_1 = __importDefault(require("serverless-http"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const authRoutes_1 = __importDefault(require("./routes/authRoutes"));
 const productRoutes_1 = __importDefault(require("./routes/productRoutes"));
@@ -51,9 +52,12 @@ app.use("/api/reviews", reviewRoutes_1.default);
 app.get("/", (req, res) => {
     res.send("Hello from E-Commerce backend");
 });
-app.listen(PORT, () => {
-    console.log(`Server is now running on port ${PORT}`);
-});
+if (process.env.NODE_ENV !== "production") {
+    app.listen(PORT, () => {
+        console.log(`Server is now running on port ${PORT}`);
+    });
+}
+exports.default = (0, serverless_http_1.default)(app);
 process.on("SIGINT", () => __awaiter(void 0, void 0, void 0, function* () {
     yield exports.prisma.$disconnect();
     process.exit();
