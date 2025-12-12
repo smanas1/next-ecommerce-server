@@ -30,13 +30,13 @@ function setTokens(res, accessToken, refreshToken) {
     return __awaiter(this, void 0, void 0, function* () {
         res.cookie("accessToken", accessToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
+            secure: true,
             sameSite: "none",
             maxAge: 60 * 60 * 1000,
         });
         res.cookie("refreshToken", refreshToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
+            secure: true,
             sameSite: "none",
             maxAge: 7 * 24 * 60 * 60,
         });
