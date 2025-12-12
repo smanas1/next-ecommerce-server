@@ -6,6 +6,7 @@ import {
   fetchFeatureBanners,
   getFeaturedProducts,
   updateFeaturedProducts,
+  deleteFeatureBanner,
 } from "../controllers/settingsController";
 
 const router = express.Router();
@@ -19,6 +20,12 @@ router.post(
 );
 
 router.get("/get-banners", authenticateJwt, fetchFeatureBanners);
+router.delete(
+  "/delete-banner/:id",
+  authenticateJwt,
+  isSuperAdmin,
+  deleteFeatureBanner
+);
 router.post(
   "/update-feature-products",
   authenticateJwt,

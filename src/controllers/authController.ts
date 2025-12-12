@@ -12,7 +12,7 @@ function generateToken(userId: string, email: string, role: string) {
       role,
     },
     process.env.JWT_SECRET!,
-    { expiresIn: "60m" }
+    { expiresIn: "3d" }
   );
   const refreshToken = uuidv4();
   return { accessToken, refreshToken };
@@ -24,7 +24,9 @@ async function setTokens(
   refreshToken: string
 ) {
   // Determine if the connection is secure (HTTPS) to properly set secure cookie flag
-  const isSecure = (res.req as any).secure || (res.req as any).headers['x-forwarded-proto'] === 'https';
+  const isSecure =
+    (res.req as any).secure ||
+    (res.req as any).headers["x-forwarded-proto"] === "https";
 
   res.cookie("accessToken", accessToken, {
     httpOnly: true,
@@ -167,7 +169,7 @@ export const refreshAccessToken = async (
     console.error(error);
     res.status(500).json({
       success: false,
-      error: "Refresh token error"
+      error: "Refresh token error",
     });
   }
 };

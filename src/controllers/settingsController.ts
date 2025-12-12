@@ -133,3 +133,41 @@ export const getFeaturedProducts = async (
     });
   }
 };
+
+export const deleteFeatureBanner = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    // Find the banner to delete
+    const banner = await prisma.featureBanner.findUnique({
+      where: { id },
+    });
+
+    if (!banner) {
+      res.status(404).json({
+        success: false,
+        message: "Banner not found",
+      });
+      return;
+    }
+
+    // Delete the banner from the database
+    await prisma.featureBanner.delete({
+      where: { id },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Banner deleted successfully",
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete feature banner",
+    });
+  }
+};
