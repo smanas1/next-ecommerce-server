@@ -43,7 +43,7 @@ if (process.env.NODE_ENV === "production") {
     else {
         console.warn("CLIENT_URL environment variable is not set in production. Please set it in your deployment platform settings.");
         corsOptions = {
-            origin: "*",
+            origin: process.env.CLIENT_URL || "http://localhost:3000",
             credentials: true,
             methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
             allowedHeaders: ["Content-Type", "Authorization"],
