@@ -25,15 +25,35 @@ export const createProduct = async (
 
     const files = req.files as Express.Multer.File[];
 
-    //upload all images to cloudinary
+    if (!files || files.length === 0) {
+      res.status(400).json({ success: false, message: "Missing required parameter - file" });
+      return;
+    }
+
+    //upload all images to cloudinary from memory buffer
     const uploadPromises = files.map((file) =>
-      cloudinary.uploader.upload(file.path, {
-        folder: "ecommerce",
+      new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          {
+            folder: "ecommerce",
+            resource_type: "image"
+          },
+          (error, result) => {
+            if (error) {
+              console.error("Cloudinary upload error:", error);
+              reject(error);
+            } else {
+              resolve(result);
+            }
+          }
+        );
+        // Write the buffer to the cloudinary upload stream
+        stream.end(file.buffer);
       })
     );
 
-    const uploadresults = await Promise.all(uploadPromises);
-    const imageUrls = uploadresults.map((result) => result.secure_url);
+    const uploadResults = await Promise.all(uploadPromises as Promise<any>[]);
+    const imageUrls = uploadResults.map((result: any) => result.secure_url);
 
     const newlyCreatedProduct = await prisma.product.create({
       data: {
@@ -52,12 +72,10 @@ export const createProduct = async (
       },
     });
 
-    //clean the uploaded files
-    files.forEach((file) => fs.unlinkSync(file.path));
     res.status(201).json(newlyCreatedProduct);
   } catch (e) {
     console.error(e);
-    res.status(500).json({ success: false, message: "Some error occured!" });
+    res.status(500).json({ success: false, message: "Some error occurred!" });
   }
 };
 

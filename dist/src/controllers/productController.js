@@ -15,18 +15,34 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getProductsForClient = exports.deleteProduct = exports.updateProduct = exports.getProductByID = exports.fetchAllProductsForAdmin = exports.createProduct = void 0;
 const cloudinary_1 = __importDefault(require("../config/cloudinary"));
 const server_1 = require("../server");
-const fs_1 = __importDefault(require("fs"));
 //create a product
 const createProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { name, brand, description, category, gender, sizes, colors, price, stock, } = req.body;
         const files = req.files;
-        //upload all images to cloudinary
-        const uploadPromises = files.map((file) => cloudinary_1.default.uploader.upload(file.path, {
-            folder: "ecommerce",
+        if (!files || files.length === 0) {
+            res.status(400).json({ success: false, message: "Missing required parameter - file" });
+            return;
+        }
+        //upload all images to cloudinary from memory buffer
+        const uploadPromises = files.map((file) => new Promise((resolve, reject) => {
+            const stream = cloudinary_1.default.uploader.upload_stream({
+                folder: "ecommerce",
+                resource_type: "image"
+            }, (error, result) => {
+                if (error) {
+                    console.error("Cloudinary upload error:", error);
+                    reject(error);
+                }
+                else {
+                    resolve(result);
+                }
+            });
+            // Write the buffer to the cloudinary upload stream
+            stream.end(file.buffer);
         }));
-        const uploadresults = yield Promise.all(uploadPromises);
-        const imageUrls = uploadresults.map((result) => result.secure_url);
+        const uploadResults = yield Promise.all(uploadPromises);
+        const imageUrls = uploadResults.map((result) => result.secure_url);
         const newlyCreatedProduct = yield server_1.prisma.product.create({
             data: {
                 name,
@@ -43,13 +59,11 @@ const createProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 rating: 0,
             },
         });
-        //clean the uploaded files
-        files.forEach((file) => fs_1.default.unlinkSync(file.path));
         res.status(201).json(newlyCreatedProduct);
     }
     catch (e) {
         console.error(e);
-        res.status(500).json({ success: false, message: "Some error occured!" });
+        res.status(500).json({ success: false, message: "Some error occurred!" });
     }
 });
 exports.createProduct = createProduct;
