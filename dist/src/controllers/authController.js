@@ -35,16 +35,16 @@ function setTokens(res, accessToken, refreshToken) {
             ? {
                 httpOnly: true,
                 secure: true,
-                sameSite: "none",
-                maxAge: 60 * 60 * 1000, // 1 hour for access token
+                sameSite: "lax",
+                maxAge: 60 * 60 * 10000, // 1 hour for access token
             }
             : {
                 httpOnly: true,
                 secure: false,
                 sameSite: "lax",
-                maxAge: 60 * 60 * 1000, // 1 hour for access token
+                maxAge: 60 * 60 * 10000, // 1 hour for access token
             };
-        const refreshTokenOptions = Object.assign(Object.assign({}, cookieConfig), { maxAge: 7 * 24 * 60 * 60 * 1000 });
+        const refreshTokenOptions = Object.assign(Object.assign({}, cookieConfig), { maxAge: 7 * 24 * 60 * 60 * 10000 });
         res.cookie("accessToken", accessToken, cookieConfig);
         res.cookie("refreshToken", refreshToken, refreshTokenOptions);
         res.cookie("refreshToken", refreshToken, refreshTokenOptions);

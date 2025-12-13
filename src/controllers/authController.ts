@@ -31,19 +31,19 @@ async function setTokens(
     ? {
         httpOnly: true,
         secure: true,
-        sameSite: "none" as const,
-        maxAge: 60 * 60 * 1000, // 1 hour for access token
+        sameSite: "lax" as const,
+        maxAge: 60 * 60 * 10000,
       }
     : {
         httpOnly: true,
         secure: false,
         sameSite: "lax" as const,
-        maxAge: 60 * 60 * 1000, // 1 hour for access token
+        maxAge: 60 * 60 * 10000,
       };
 
   const refreshTokenOptions = {
     ...cookieConfig,
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days for refresh token
+    maxAge: 7 * 24 * 60 * 60 * 10000,
   };
 
   res.cookie("accessToken", accessToken, cookieConfig);
