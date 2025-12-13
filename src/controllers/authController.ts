@@ -23,33 +23,31 @@ async function setTokens(
   accessToken: string,
   refreshToken: string
 ) {
-  const isSecure =
-    (res.req as any).secure ||
-    (res.req as any).headers["x-forwarded-proto"] === "https";
+  const isProduction = process.env.NODE_ENV === "production";
 
-  const cookieConfig = isSecure
+  // In development, use lax sameSite for localhost
+  // In production, use none with secure for cross-site requests
+  const cookieConfig = isProduction
     ? {
         httpOnly: true,
         secure: true,
-        sameSite: "lax" as const,
+        sameSite: "none" as const,
+        maxAge: 60 * 60 * 1000, // 1 hour for access token
       }
     : {
         httpOnly: true,
         secure: false,
         sameSite: "lax" as const,
+        maxAge: 60 * 60 * 1000, // 1 hour for access token
       };
-
-  const accessTokenOptions = {
-    ...cookieConfig,
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours for access token
-  };
 
   const refreshTokenOptions = {
     ...cookieConfig,
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days for refresh token
   };
 
-  res.cookie("accessToken", accessToken, accessTokenOptions);
+  res.cookie("accessToken", accessToken, cookieConfig);
+  res.cookie("refreshToken", refreshToken, refreshTokenOptions);
   res.cookie("refreshToken", refreshToken, refreshTokenOptions);
 }
 
@@ -111,6 +109,12 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       extractCurrentUser.role
     );
 
+    // Save refresh token to database
+    await prisma.user.update({
+      where: { id: extractCurrentUser.id },
+      data: { refreshToken: refreshToken },
+    });
+
     //set out tokens
     await setTokens(res, accessToken, refreshToken);
     res.status(200).json({
@@ -163,6 +167,12 @@ export const refreshAccessToken = async (
       user.role
     );
 
+    // Update user with new refresh token
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { refreshToken: newRefreshToken },
+    });
+
     // Set new tokens in cookies
     await setTokens(res, accessToken, newRefreshToken);
 
@@ -186,6 +196,20 @@ export const refreshAccessToken = async (
 };
 
 export const logout = async (req: Request, res: Response): Promise<void> => {
+  const refreshToken = req.cookies.refreshToken;
+
+  // Clear refresh token from database if it exists
+  if (refreshToken) {
+    try {
+      await prisma.user.updateMany({
+        where: { refreshToken: refreshToken },
+        data: { refreshToken: null },
+      });
+    } catch (error) {
+      console.error("Error clearing refresh token:", error);
+    }
+  }
+
   res.clearCookie("accessToken");
   res.clearCookie("refreshToken");
   res.json({

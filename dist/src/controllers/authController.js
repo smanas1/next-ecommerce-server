@@ -28,22 +28,25 @@ function generateToken(userId, email, role) {
 }
 function setTokens(res, accessToken, refreshToken) {
     return __awaiter(this, void 0, void 0, function* () {
-        const isSecure = res.req.secure ||
-            res.req.headers["x-forwarded-proto"] === "https";
-        const cookieConfig = isSecure
+        const isProduction = process.env.NODE_ENV === "production";
+        // In development, use lax sameSite for localhost
+        // In production, use none with secure for cross-site requests
+        const cookieConfig = isProduction
             ? {
                 httpOnly: true,
                 secure: true,
-                sameSite: "lax",
+                sameSite: "none",
+                maxAge: 60 * 60 * 1000, // 1 hour for access token
             }
             : {
                 httpOnly: true,
                 secure: false,
                 sameSite: "lax",
+                maxAge: 60 * 60 * 1000, // 1 hour for access token
             };
-        const accessTokenOptions = Object.assign(Object.assign({}, cookieConfig), { maxAge: 24 * 60 * 60 * 1000 });
         const refreshTokenOptions = Object.assign(Object.assign({}, cookieConfig), { maxAge: 7 * 24 * 60 * 60 * 1000 });
-        res.cookie("accessToken", accessToken, accessTokenOptions);
+        res.cookie("accessToken", accessToken, cookieConfig);
+        res.cookie("refreshToken", refreshToken, refreshTokenOptions);
         res.cookie("refreshToken", refreshToken, refreshTokenOptions);
     });
 }
@@ -95,6 +98,11 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         }
         //create our access and refreshtoken
         const { accessToken, refreshToken } = generateToken(extractCurrentUser.id, extractCurrentUser.email, extractCurrentUser.role);
+        // Save refresh token to database
+        yield server_1.prisma.user.update({
+            where: { id: extractCurrentUser.id },
+            data: { refreshToken: refreshToken },
+        });
         //set out tokens
         yield setTokens(res, accessToken, refreshToken);
         res.status(200).json({
@@ -137,6 +145,11 @@ const refreshAccessToken = (req, res) => __awaiter(void 0, void 0, void 0, funct
             return;
         }
         const { accessToken, refreshToken: newRefreshToken } = generateToken(user.id, user.email, user.role);
+        // Update user with new refresh token
+        yield server_1.prisma.user.update({
+            where: { id: user.id },
+            data: { refreshToken: newRefreshToken },
+        });
         // Set new tokens in cookies
         yield setTokens(res, accessToken, newRefreshToken);
         res.status(200).json({
@@ -160,6 +173,19 @@ const refreshAccessToken = (req, res) => __awaiter(void 0, void 0, void 0, funct
 });
 exports.refreshAccessToken = refreshAccessToken;
 const logout = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const refreshToken = req.cookies.refreshToken;
+    // Clear refresh token from database if it exists
+    if (refreshToken) {
+        try {
+            yield server_1.prisma.user.updateMany({
+                where: { refreshToken: refreshToken },
+                data: { refreshToken: null },
+            });
+        }
+        catch (error) {
+            console.error("Error clearing refresh token:", error);
+        }
+    }
     res.clearCookie("accessToken");
     res.clearCookie("refreshToken");
     res.json({
