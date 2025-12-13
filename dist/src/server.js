@@ -29,35 +29,12 @@ const reviewRoutes_1 = __importDefault(require("./routes/reviewRoutes"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 3001;
-let corsOptions;
-if (process.env.NODE_ENV === "production") {
-    const clientUrl = process.env.CLIENT_URL;
-    if (clientUrl) {
-        corsOptions = {
-            origin: clientUrl,
-            credentials: true,
-            methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-            allowedHeaders: ["Content-Type", "Authorization"],
-        };
-    }
-    else {
-        console.warn("CLIENT_URL environment variable is not set in production. Please set it in your deployment platform settings.");
-        corsOptions = {
-            origin: process.env.CLIENT_URL || "http://localhost:3000",
-            credentials: true,
-            methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-            allowedHeaders: ["Content-Type", "Authorization"],
-        };
-    }
-}
-else {
-    corsOptions = {
-        origin: process.env.CLIENT_URL || "http://localhost:3000",
-        credentials: true,
-        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        allowedHeaders: ["Content-Type", "Authorization"],
-    };
-}
+let corsOptions = {
+    origin: process.env.CLIENT_URL,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+};
 app.use((0, cors_1.default)(corsOptions));
 app.use(express_1.default.json());
 app.use((0, cookie_parser_1.default)());

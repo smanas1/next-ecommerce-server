@@ -23,24 +23,20 @@ async function setTokens(
   accessToken: string,
   refreshToken: string
 ) {
-  // Determine if the connection is secure (HTTPS)
   const isSecure =
     (res.req as any).secure ||
     (res.req as any).headers["x-forwarded-proto"] === "https";
 
-  // For cross-origin setups (different domains), use appropriate SameSite setting:
-  // - sameSite: 'none' with secure: true for cross-domain requests in production
-  // - sameSite: 'lax' for same-domain or development setups
   const cookieConfig = isSecure
     ? {
         httpOnly: true,
-        secure: true, // Must be true when sameSite is 'none'
-        sameSite: "none" as const // Required for cross-domain cookies in production HTTPS
+        secure: true,
+        sameSite: "lax" as const,
       }
     : {
         httpOnly: true,
-        secure: false, // For development without HTTPS
-        sameSite: "lax" as const // Safer for non-secure contexts
+        secure: false,
+        sameSite: "lax" as const,
       };
 
   const accessTokenOptions = {

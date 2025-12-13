@@ -28,22 +28,18 @@ function generateToken(userId, email, role) {
 }
 function setTokens(res, accessToken, refreshToken) {
     return __awaiter(this, void 0, void 0, function* () {
-        // Determine if the connection is secure (HTTPS)
         const isSecure = res.req.secure ||
             res.req.headers["x-forwarded-proto"] === "https";
-        // For cross-origin setups (different domains), use appropriate SameSite setting:
-        // - sameSite: 'none' with secure: true for cross-domain requests in production
-        // - sameSite: 'lax' for same-domain or development setups
         const cookieConfig = isSecure
             ? {
                 httpOnly: true,
-                secure: true, // Must be true when sameSite is 'none'
-                sameSite: "none" // Required for cross-domain cookies in production HTTPS
+                secure: true,
+                sameSite: "lax",
             }
             : {
                 httpOnly: true,
-                secure: false, // For development without HTTPS
-                sameSite: "lax" // Safer for non-secure contexts
+                secure: false,
+                sameSite: "lax",
             };
         const accessTokenOptions = Object.assign(Object.assign({}, cookieConfig), { maxAge: 24 * 60 * 60 * 1000 });
         const refreshTokenOptions = Object.assign(Object.assign({}, cookieConfig), { maxAge: 7 * 24 * 60 * 60 * 1000 });
