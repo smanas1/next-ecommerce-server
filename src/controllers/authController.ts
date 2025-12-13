@@ -31,7 +31,7 @@ async function setTokens(
     ? {
         httpOnly: true,
         secure: true,
-        sameSite: "lax" as const,
+        sameSite: "none" as const,
         maxAge: 60 * 60 * 10000,
       }
     : {
@@ -47,7 +47,6 @@ async function setTokens(
   };
 
   res.cookie("accessToken", accessToken, cookieConfig);
-  res.cookie("refreshToken", refreshToken, refreshTokenOptions);
   res.cookie("refreshToken", refreshToken, refreshTokenOptions);
 }
 
